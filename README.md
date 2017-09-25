@@ -1,0 +1,2 @@
+# memcmpe
+Enhanced memcmp()
