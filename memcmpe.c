@@ -4,14 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define PAGE_SIZE 4097
+#define PAGE_SIZE (64*1024)
 
 static int memcmpe(const void *s1, const void *s2, size_t len, size_t *offset) {
-        size_t i = 0;
-        size_t iter = 1024;
         const size_t max_error = 256;
-        uint8_t *ps1 = (uint8_t *) s1;
-        uint8_t *ps2 = (uint8_t *) s2;
+        const uint8_t *ps1 = (uint8_t *) s1;
+        const uint8_t *ps2 = (uint8_t *) s2;
+        size_t i = 0, iter = 1024;
         int ret = 0;
 
         if (offset == NULL) {
@@ -21,7 +20,6 @@ static int memcmpe(const void *s1, const void *s2, size_t len, size_t *offset) {
                         i = *offset;
 
                 while (i < len) {
-
                         if (len-i < iter)
                                 iter = len-i;
 
@@ -44,7 +42,7 @@ static int memcmpe(const void *s1, const void *s2, size_t len, size_t *offset) {
 int main() {
         uint8_t PAGE1[PAGE_SIZE];
         uint8_t PAGE2[PAGE_SIZE];
-        uint64_t iter = 1024;
+        uint64_t iter = 1024*30;
         uint64_t i;
         clock_t start, end;
         size_t offset = 0;

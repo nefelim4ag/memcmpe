@@ -1,4 +1,4 @@
-CFLAGS=-O1 -Wall -Werror
+CFLAGS=-O3 -mtune=native -Wall -Werror
 
 default all: memcmpe
 
