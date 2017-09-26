@@ -8,8 +8,8 @@
 
 static int memcmpe(const void *s1, const void *s2, size_t len, size_t *offset) {
         size_t i = 0;
-        const size_t iter = 1024;
-        size_t clen;
+        size_t iter = 1024;
+        const size_t max_error = 256;
         uint8_t *ps1 = (uint8_t *) s1;
         uint8_t *ps2 = (uint8_t *) s2;
         int ret = 0;
@@ -17,23 +17,23 @@ static int memcmpe(const void *s1, const void *s2, size_t len, size_t *offset) {
         if (offset == NULL) {
                 ret = memcmp(s1, s2, len);
         } else {
-                if (*offset < len)
+                if (*offset <= len)
                         i = *offset;
 
-                for (; i < len; i+= iter) {
-                        if (len-i > iter)
-                                clen = iter;
-                        else
-                                clen = len-i;
-                        ret = memcmp(&ps1[i], &ps2[i], clen);
-                        if (ret)
-                                break;
-                }
+                while (i < len) {
 
-                /*for (; i < len; i++) {
-                        if(ps1[i] != ps2[i])
-                                break;
-                }*/
+                        if (len-i < iter)
+                                iter = len-i;
+
+                        ret = memcmp(&ps1[i], &ps2[i], iter);
+                        if (ret) {
+                                if (iter < max_error)
+                                        break;
+                                iter /= 2;
+                                continue;
+                        }
+                        i+= iter;
+                }
 
                 *offset = i;
         }
@@ -60,8 +60,9 @@ int main() {
         }
 
         PAGE2[PAGE_SIZE-1] = 32;
-        PAGE1[PAGE_SIZE-1] = 33;
+        PAGE1[PAGE_SIZE-1] = 32;
         PAGE1[PAGE_SIZE-1356] = 1;
+        //PAGE2[PAGE_SIZE-1356] = 1;
 
         printf("PAGE_SIZE: %u, loop count: %lu\n", PAGE_SIZE, iter);
 
@@ -70,6 +71,7 @@ int main() {
         for (i = 0; i < iter; i++) {
                 ret = memcmpe(&PAGE1, &PAGE2, PAGE_SIZE, NULL);
                 PAGE1[PAGE_SIZE-1] = ret ^ 127;
+                PAGE2[PAGE_SIZE-1] = ret ^ 127;
         }
         end = clock()*1000000/CLOCKS_PER_SEC;
 
@@ -82,14 +84,17 @@ int main() {
         }
 
         PAGE2[PAGE_SIZE-1] = 32;
-        PAGE1[PAGE_SIZE-1] = 33;
+        PAGE1[PAGE_SIZE-1] = 32;
         PAGE1[PAGE_SIZE-1356] = 1;
+        //PAGE2[PAGE_SIZE-1356] = 1;
 
 {
         start = clock()*1000000/CLOCKS_PER_SEC;
         for (i = 0; i < iter; i++) {
                 offset=0;
                 ret = memcmpe(&PAGE1, &PAGE2, PAGE_SIZE, &offset);
+                PAGE1[PAGE_SIZE-1] = ret ^ 127;
+                PAGE2[PAGE_SIZE-1] = ret ^ 127;
         }
         end = clock()*1000000/CLOCKS_PER_SEC;
 
@@ -102,8 +107,9 @@ int main() {
         }
 
         PAGE2[PAGE_SIZE-1] = 32;
-        PAGE1[PAGE_SIZE-1] = 33;
+        PAGE1[PAGE_SIZE-1] = 32;
         PAGE1[PAGE_SIZE-1356] = 1;
+        //PAGE2[PAGE_SIZE-1356] = 1;
 
 {
         offset = 0;
@@ -111,6 +117,8 @@ int main() {
         for (i = 0; i < iter; i++) {
                 //offset=0;
                 ret = memcmpe(&PAGE1, &PAGE2, PAGE_SIZE, &offset);
+                PAGE1[PAGE_SIZE-1] = ret ^ 127;
+                PAGE2[PAGE_SIZE-1] = ret ^ 127;
         }
         end = clock()*1000000/CLOCKS_PER_SEC;
 
