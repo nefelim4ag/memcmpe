@@ -7,7 +7,7 @@
 #define PAGE_SIZE (64*1024)
 
 static int memcmpe(const void *s1, const void *s2, size_t len, size_t *offset) {
-        const size_t max_error = 256;
+        const size_t max_error = 8;
         const uint8_t *ps1 = (uint8_t *) s1;
         const uint8_t *ps2 = (uint8_t *) s2;
         size_t i = 0, iter = 1024;
@@ -20,17 +20,19 @@ static int memcmpe(const void *s1, const void *s2, size_t len, size_t *offset) {
                         i = *offset;
 
                 while (i < len) {
-                        if (len-i < iter)
-                                iter = len-i;
+                        if (len - i < iter)
+                                iter = len - i;
 
                         ret = memcmp(&ps1[i], &ps2[i], iter);
+
                         if (ret) {
+                                iter = iter >> 1;
                                 if (iter < max_error)
                                         break;
-                                iter /= 2;
                                 continue;
                         }
-                        i+= iter;
+
+                        i += iter;
                 }
 
                 *offset = i;
@@ -48,6 +50,7 @@ int main() {
         size_t offset = 0;
         int ret;
         srand(time(NULL));
+        int rand_offset = rand() % (PAGE_SIZE >> 4);
 
 
         iter *= 1024*1024*4/PAGE_SIZE;
@@ -59,8 +62,8 @@ int main() {
 
         PAGE2[PAGE_SIZE-1] = 32;
         PAGE1[PAGE_SIZE-1] = 32;
-        PAGE1[PAGE_SIZE-1356] = 1;
-        //PAGE2[PAGE_SIZE-1356] = 1;
+        PAGE1[PAGE_SIZE-rand_offset] = 1;
+        //PAGE2[PAGE_SIZE-rand_offset] = 1;
 
         printf("PAGE_SIZE: %u, loop count: %lu\n", PAGE_SIZE, iter);
 
@@ -83,7 +86,7 @@ int main() {
 
         PAGE2[PAGE_SIZE-1] = 32;
         PAGE1[PAGE_SIZE-1] = 32;
-        PAGE1[PAGE_SIZE-1356] = 1;
+        PAGE1[PAGE_SIZE-rand_offset] = 1;
         //PAGE2[PAGE_SIZE-1356] = 1;
 
 {
@@ -106,7 +109,7 @@ int main() {
 
         PAGE2[PAGE_SIZE-1] = 32;
         PAGE1[PAGE_SIZE-1] = 32;
-        PAGE1[PAGE_SIZE-1356] = 1;
+        PAGE1[PAGE_SIZE-rand_offset] = 1;
         //PAGE2[PAGE_SIZE-1356] = 1;
 
 {
